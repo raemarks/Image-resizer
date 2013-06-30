@@ -56,9 +56,9 @@ Image *readImage (const char* filename) {
 		newImage->bpixels = (unsigned char *) malloc(sizeof(unsigned char) * newImage->sizeX*newImage->sizeY);
 
 		for (i = 0; i < newImage->sizeX*newImage->sizeY; i++) {
-			fscanf(infile, "%hhu", &newImage->rpixels[i]);
-			fscanf(infile, "%hhu", &newImage->gpixels[i]);
-			fscanf(infile, "%hhu", &newImage->bpixels[i]);
+			newImage->rpixels[i] = fgetc(infile);
+			newImage->gpixels[i] = fgetc(infile);
+			newImage->bpixels[i] = fgetc(infile);
 		}	
 	} 
 
@@ -86,7 +86,9 @@ void *writeImage (const char *filename, Image *image) {
 		}
 	} else if (strcmp(image->header, "P6") == 0) { //binary .ppm
 		for (i = 0; i < (image->sizeX*image->sizeY); i++) {
-			fprintf(outfile, "%hhu %hhu %hhu ", image->rpixels[i], image->gpixels[i], image->bpixels[i]);
+			fputc(image->rpixels[i], outfile);
+			fputc(image->gpixels[i], outfile);
+			fputc(image->bpixels[i], outfile);
 		}
 	}
 }
