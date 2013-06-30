@@ -31,7 +31,7 @@ Image *readImage (const char* filename) {
 
 		for (i = 0; i < newImage->sizeX*newImage->sizeY; i++) {
 			fscanf(infile, "%d", &gy);
-			newImage->gypixels[i] = gy; //implicit typecast
+			newImage->gypixels[i] = (unsigned char) gy; //implicit typecast
 		}	
 	} else if (strcmp(newImage->header, "P3") == 0) { //.ppm plain text
 		newImage->rpixels = (unsigned char *) malloc(sizeof(unsigned char) * newImage->sizeX*newImage->sizeY);
@@ -40,15 +40,15 @@ Image *readImage (const char* filename) {
 
 		for (i = 0; i < newImage->sizeX*newImage->sizeY; i++) {
 			fscanf(infile, "%d%d%d", &r, &g, &b);
-			newImage->rpixels[i] = r; //implicit typecast
-			newImage->gpixels[i] = g; //implicit typecast
-			newImage->bpixels[i] = b; //implicit typecast
+			newImage->rpixels[i] = (unsigned char) r; //implicit typecast
+			newImage->gpixels[i] = (unsigned char) g; //implicit typecast
+			newImage->bpixels[i] = (unsigned char) b; //implicit typecast
 		}	
 	} else if (strcmp(newImage->header, "P5") == 0) { //.pgm binary
 		newImage->gypixels = (unsigned char *) malloc(sizeof(unsigned char) * newImage->sizeX*newImage->sizeY);
 
 		for (i = 0; i < newImage->sizeX*newImage->sizeY; i++) {
-			fscanf(infile, "%hhu", &newImage->gypixels[i]);
+			newImage->gypixels[i] = fgetc(infile);
 		}	
 	} else if (strcmp(newImage->header, "P6") == 0) { //.ppm binary
 		newImage->rpixels = (unsigned char *) malloc(sizeof(unsigned char) * newImage->sizeX*newImage->sizeY);
@@ -70,19 +70,21 @@ void *writeImage (const char *filename, Image *image) {
 	FILE *outfile = fopen(filename, "w");
 	int i;
 
-	fprintf(outfile, "%s\n%d %d %d\n", image->header, image->sizeX, image->sizeY, image->max);
+	fprintf(outfile, "%s\n%d %d\n%d", image->header, image->sizeX, image->sizeY, image->max);
 
 	if (strcmp(image->header, "P2") == 0) { //plain text .pgm
+		fprintf(outfile, "\n");
 		for (i = 0; i < (image->sizeX*image->sizeY); i++) {
 			fprintf(outfile, "%d ", (int) image->gypixels[i]);
 		}
 	} else if (strcmp(image->header, "P3") == 0) { //plain text .ppm
+		fprintf(outfile, "\n");
 		for (i = 0; i < (image->sizeX*image->sizeY); i++) {
 			fprintf(outfile, "%d %d %d ", (int) image->rpixels[i], (int) image->gpixels[i], (int) image->bpixels[i]);
 		}
 	} else if (strcmp(image->header, "P5") == 0) { //binary .pgm
 		for (i = 0; i < (image->sizeX*image->sizeY); i++) {
-			fprintf(outfile, "%hhu", image->gypixels[i]);
+			fputc(image->gypixels[i], outfile);
 		}
 	} else if (strcmp(image->header, "P6") == 0) { //binary .ppm
 		for (i = 0; i < (image->sizeX*image->sizeY); i++) {
@@ -91,6 +93,7 @@ void *writeImage (const char *filename, Image *image) {
 			fputc(image->bpixels[i], outfile);
 		}
 	}
+	fclose(outfile);
 }
 
 Image *enlargeImagePixels (Image *image) {
